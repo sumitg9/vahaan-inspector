@@ -1,0 +1,10 @@
+{
+  "status_code": 200,
+  "status": "success",
+  "message": "No traffic challan records found for vehicle",
+  "data": {
+    "reg_no": "KA01MJ0001",
+    "total_challans": 0,
+    "challans": []
+  }
+}

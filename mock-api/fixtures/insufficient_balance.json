@@ -1,0 +1,5 @@
+{
+  "status_code": 402,
+  "status": "error",
+  "message": "Insufficient provider wallet balance. Please recharge your APISathi account."
+}

@@ -1,0 +1,44 @@
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "./button";
+import { LucideIcon, Search, AlertCircle, Inbox } from "lucide-react";
+
+export interface EmptyStateProps {
+  icon?: LucideIcon;
+  title: string;
+  description: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  className?: string;
+}
+
+export function EmptyState({
+  icon: Icon = Inbox,
+  title,
+  description,
+  actionLabel,
+  onAction,
+  className,
+}: EmptyStateProps) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed border-slate-200 bg-white/50",
+        className
+      )}
+    >
+      <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 mb-3 shadow-inner">
+        <Icon className="w-6 h-6" />
+      </div>
+      <h3 className="text-sm font-bold text-slate-900 tracking-tight">{title}</h3>
+      <p className="text-xs text-slate-500 max-w-sm mt-1">{description}</p>
+      {actionLabel && onAction && (
+        <div className="mt-4">
+          <Button variant="default" size="sm" onClick={onAction}>
+            {actionLabel}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}

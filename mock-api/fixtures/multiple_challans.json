@@ -1,0 +1,33 @@
+{
+  "status_code": 200,
+  "status": "success",
+  "message": "Challan records fetched successfully",
+  "data": {
+    "reg_no": "MH12AB1234",
+    "total_challans": 2,
+    "challans": [
+      {
+        "challan_number": "MH1209230009182",
+        "challan_date": "2026-09-12 14:32:00",
+        "offence_name": "Driving in violation of mandatory road signs / Speeding (Sec 112/183)",
+        "amount": 2000,
+        "status": "Pending",
+        "state": "MH",
+        "rto": "PUNE HIGHWAY POLICE",
+        "court_name": null,
+        "payment_date": null
+      },
+      {
+        "challan_number": "MH1205220001092",
+        "challan_date": "2026-05-10 09:15:00",
+        "offence_name": "Improper Parking creating obstruction (Sec 122/177)",
+        "amount": 1000,
+        "status": "Disposed",
+        "state": "MH",
+        "rto": "PUNE CITY POLICE",
+        "court_name": null,
+        "payment_date": "2026-05-12 11:00:00"
+      }
+    ]
+  }
+}

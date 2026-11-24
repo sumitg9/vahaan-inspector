@@ -1,0 +1,12 @@
+{
+  "name": "vahancheck-mock-api",
+  "version": "1.0.0",
+  "description": "Deterministic Mock Server for APISathi Vehicle RC & eChallan Gateways",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test.js"
+  },
+  "author": "VahanCheck Team",
+  "license": "UNLICENSED"
+}

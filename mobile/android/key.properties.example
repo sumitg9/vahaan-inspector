@@ -1,0 +1,8 @@
+# VahanCheck Enterprise — Release Signing Keystore Configuration
+# Copy this file to mobile/android/key.properties and populate with production keystore details.
+# IMPORTANT: Never commit actual keystores or passwords to version control (Invariant 1).
+
+storePassword=YOUR_KEYSTORE_PASSWORD_HERE
+keyPassword=YOUR_KEY_PASSWORD_HERE
+keyAlias=vahancheck_release_key
+storeFile=../vahancheck_release.keystore

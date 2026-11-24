@@ -1,0 +1,5 @@
+{
+  "status_code": 429,
+  "status": "error",
+  "message": "Too many requests. Rate limit exceeded for this API key. Retry after 60 seconds."
+}

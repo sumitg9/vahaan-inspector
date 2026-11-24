@@ -1,0 +1,28 @@
+{
+  "status_code": 200,
+  "status": "success",
+  "message": "Vehicle details retrieved with restricted fields",
+  "data": {
+    "rc_number": "DL01XY9999",
+    "registration_date": "2020-01-10",
+    "chassis_number": "MALBB51BLHM98****",
+    "engine_number": "G4LCHM76****",
+    "owner_name": "R**** S****",
+    "ownership_sequence": 2,
+    "maker": "HYUNDAI MOTOR INDIA LTD",
+    "model": "CRETA",
+    "variant": "1.5 SX",
+    "vehicle_class": "Motor Car (LMV)",
+    "fuel_type": "PETROL",
+    "norms": "BS-VI",
+    "rto_code": "DL-01",
+    "rto_name": "MALL ROAD RTO",
+    "rc_status": "ACTIVE",
+    "financier": null,
+    "insurance_company": "BAJAJ ALLIANZ",
+    "insurance_valid_until": "2025-01-09",
+    "fitness_valid_until": null,
+    "national_permit_number": null,
+    "blacklist_status": "CLEAN"
+  }
+}

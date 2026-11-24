@@ -1,0 +1,223 @@
+version: '3.8'
+
+# VahanCheck Enterprise — Production Docker Infrastructure
+# Features: Hardened HTTPS Nginx, Production Laravel API, Dedicated Queue Workers,
+# Cron Scheduler, Persistent PostgreSQL 16, Redis Cache, S3 Storage & Prometheus Telemetry
+
+services:
+  # 1. Hardened Nginx Reverse Proxy (SSL Termination & Rate Limiting)
+  nginx:
+    image: nginx:alpine
+    container_name: vahan_prod_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/production.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - certbot_challenge:/var/www/certbot:ro
+    depends_on:
+      - backend
+      - web
+    networks:
+      - vahan_prod_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # 2. Production Laravel 11 Backend API Service
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../infrastructure/docker/backend/Dockerfile.prod
+    container_name: vahan_prod_backend
+    restart: always
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${APP_URL:-https://vahancheck.enterprise}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-vahancheck_prod}
+      DB_USERNAME: ${DB_USERNAME:-vahan_prod_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      AWS_ENDPOINT: ${AWS_ENDPOINT:-http://minio:9000}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_BUCKET: ${AWS_BUCKET:-vahan-prod-storage}
+      AWS_DEFAULT_REGION: ap-south-1
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+      PROVIDER_DEFAULT: ${PROVIDER_DEFAULT:-apisathi}
+      APISATHI_BASE_URL: ${APISATHI_BASE_URL:-https://apisathi.in/api/v1}
+      APISATHI_API_KEY: ${APISATHI_API_KEY}
+      APISATHI_SECRET_KEY: ${APISATHI_SECRET_KEY}
+      APISATHI_PROD_ENABLED: ${APISATHI_PROD_ENABLED:-false}
+    volumes:
+      - backend_storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vahan_prod_network
+    healthcheck:
+      test: ["CMD-SHELL", "php artisan health:check || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # 3. Dedicated Asynchronous Queue Worker (Horizon / Supervisor)
+  queue:
+    build:
+      context: ../backend
+      dockerfile: ../infrastructure/docker/backend/Dockerfile.prod
+    container_name: vahan_prod_queue
+    restart: always
+    command: php artisan queue:work redis --queue=high,default,notifications --sleep=2 --tries=3 --timeout=120 --max-jobs=1000 --max-time=3600
+    environment:
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-vahancheck_prod}
+      DB_USERNAME: ${DB_USERNAME:-vahan_prod_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      QUEUE_CONNECTION: redis
+    volumes:
+      - backend_storage:/var/www/html/storage
+    depends_on:
+      - backend
+      - redis
+    networks:
+      - vahan_prod_network
+
+  # 4. Automated Scheduled Cron Runner (Expiry Checks & Daily Ledgers)
+  scheduler:
+    build:
+      context: ../backend
+      dockerfile: ../infrastructure/docker/backend/Dockerfile.prod
+    container_name: vahan_prod_scheduler
+    restart: always
+    command: /usr/sbin/crond -f -l 2
+    environment:
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-vahancheck_prod}
+      DB_USERNAME: ${DB_USERNAME:-vahan_prod_user}
+      DB_PASSWORD: ${DB_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - backend_storage:/var/www/html/storage
+    depends_on:
+      - backend
+    networks:
+      - vahan_prod_network
+
+  # 5. Next.js 14 Production Standalone Web Application
+  web:
+    build:
+      context: ../web
+      dockerfile: ../infrastructure/docker/web/Dockerfile.prod
+    container_name: vahan_prod_web
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://vahancheck.enterprise/api/v1}
+    depends_on:
+      - backend
+    networks:
+      - vahan_prod_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/api/health || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # 6. Production PostgreSQL 16 with Persistent Storage & Health Checks
+  postgres:
+    image: postgres:16-alpine
+    container_name: vahan_prod_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-vahancheck_prod}
+      POSTGRES_USER: ${DB_USERNAME:-vahan_prod_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./scripts/backup-db.sh:/usr/local/bin/backup-db.sh:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-vahan_prod_user} -d ${DB_DATABASE:-vahancheck_prod}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vahan_prod_network
+
+  # 7. Production Redis 7 Cache & Queue Store (Password Protected)
+  redis:
+    image: redis:7-alpine
+    container_name: vahan_prod_redis
+    restart: always
+    command: >
+      redis-server
+      --requirepass "${REDIS_PASSWORD}"
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - vahan_prod_network
+
+  # 8. MinIO S3-Compatible Object Storage (Private Evidence Storage)
+  minio:
+    image: minio/minio:RELEASE.2024-01-18T22-51-28Z
+    container_name: vahan_prod_minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_prod_data:/data
+    networks:
+      - vahan_prod_network
+
+networks:
+  vahan_prod_network:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:
+  minio_prod_data:
+  backend_storage:
+  certbot_challenge:

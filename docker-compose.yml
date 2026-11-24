@@ -1,0 +1,4 @@
+# Root Docker Compose Wrapper referencing infrastructure stack
+# Run: docker compose -f infrastructure/docker-compose.yml up -d
+include:
+  - infrastructure/docker-compose.yml

@@ -1,0 +1,32 @@
+# Prometheus Global Scrape Configuration for VahanCheck Enterprise
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # 1. Laravel Backend Telemetry
+  - job_name: 'vahan-backend'
+    metrics_path: '/api/health'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['backend:8000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'vahan-api-node-01'
+
+  # 2. Nginx Reverse Proxy Gateway
+  - job_name: 'vahan-nginx'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['nginx:80']
+
+  # 3. PostgreSQL Database
+  - job_name: 'vahan-postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+
+  # 4. Redis Cache & Queue Pipeline
+  - job_name: 'vahan-redis'
+    static_configs:
+      - targets: ['redis:6379']

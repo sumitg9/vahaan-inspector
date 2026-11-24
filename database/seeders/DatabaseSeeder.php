@@ -1,0 +1,19 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
+{
+    /**
+     * Seed the application's database with complete enterprise reference data.
+     */
+    public function run(): void
+    {
+        $this->call([
+            InspectionTemplateSeeder::class,
+            SyntheticDataSeeder::class,
+        ]);
+    }
+}

@@ -1,0 +1,44 @@
+{
+  "status_code": 200,
+  "status": "success",
+  "message": "Historical challans retrieved",
+  "data": {
+    "reg_no": "MH04CD5678",
+    "total_challans": 3,
+    "challans": [
+      {
+        "challan_number": "MH0401190001234",
+        "challan_date": "2021-02-14 11:20:00",
+        "offence_name": "Over-speeding violation",
+        "amount": 1000,
+        "status": "Disposed",
+        "state": "MH",
+        "rto": "THANE RTO",
+        "court_name": "Judicial Magistrate Court Thane",
+        "payment_date": "2021-03-01 15:30:00"
+      },
+      {
+        "challan_number": "MH0402200004567",
+        "challan_date": "2022-05-18 16:45:00",
+        "offence_name": "Signal jumping",
+        "amount": 500,
+        "status": "Disposed",
+        "state": "MH",
+        "rto": "THANE TRAFFIC",
+        "court_name": null,
+        "payment_date": "2022-05-19 10:15:00"
+      },
+      {
+        "challan_number": "MH0403210007890",
+        "challan_date": "2023-08-22 09:10:00",
+        "offence_name": "No Parking violation",
+        "amount": 500,
+        "status": "Disposed",
+        "state": "MH",
+        "rto": "NAVI MUMBAI POLICE",
+        "court_name": null,
+        "payment_date": "2023-08-25 14:00:00"
+      }
+    ]
+  }
+}
