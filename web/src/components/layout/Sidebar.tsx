@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCurrentUser, ROLE_ROUTE_PERMISSIONS } from "@/lib/auth";
 import {
   Car,
   FileCheck2,
@@ -22,6 +23,7 @@ import {
   Sliders,
   FileText,
   ShieldAlert,
+  LogOut,
 } from "lucide-react";
 
 const navigationItems = [
@@ -48,6 +50,13 @@ const adminItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user, logout } = useCurrentUser();
+
+  // Role-based visibility filtering
+  const visibleNavItems = navigationItems.filter((item) =>
+    ROLE_ROUTE_PERMISSIONS[user.role]?.includes(item.href)
+  );
+  const canAccessGovernance = user.role === "SUPER_ADMIN";
 
   return (
     <aside className="w-64 bg-sidebar flex flex-col flex-shrink-0 text-white select-none border-r border-sidebar-border min-h-screen">
@@ -70,10 +79,13 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto">
         {/* Core Operations */}
         <div className="space-y-1">
-          <div className="px-3 text-[10px] uppercase font-bold tracking-wider text-sidebar-muted mb-1">
-            Operations
+          <div className="px-3 text-[10px] uppercase font-bold tracking-wider text-sidebar-muted mb-1 flex items-center justify-between">
+            <span>Operations</span>
+            <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded font-mono">
+              {visibleNavItems.length}
+            </span>
           </div>
-          {navigationItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isCurrent =
               item.href === "/"
@@ -102,54 +114,74 @@ export function Sidebar() {
           })}
         </div>
 
-        {/* Administration & Governance Section */}
-        <div className="space-y-1 pt-2 border-t border-sidebar-border/40">
-          <div className="px-3 text-[10px] uppercase font-bold tracking-wider text-purple-400/80 mb-1 flex items-center justify-between">
-            <span>Governance</span>
-            <span className="text-[9px] bg-purple-900/60 text-purple-300 px-1 py-0.2 rounded font-mono">Privileged</span>
-          </div>
-          {adminItems.map((item) => {
-            const Icon = item.icon;
-            const isCurrent =
-              item.href === "/admin"
-                ? pathname === "/admin"
-                : pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href));
+        {/* Administration & Governance Section (SUPER_ADMIN ONLY) */}
+        {canAccessGovernance && (
+          <div className="space-y-1 pt-2 border-t border-sidebar-border/40">
+            <div className="px-3 text-[10px] uppercase font-bold tracking-wider text-purple-400/80 mb-1 flex items-center justify-between">
+              <span>Governance</span>
+              <span className="text-[9px] bg-purple-900/60 text-purple-300 px-1 py-0.2 rounded font-mono">Super Admin</span>
+            </div>
+            {adminItems.map((item) => {
+              const Icon = item.icon;
+              const isCurrent =
+                item.href === "/admin"
+                  ? pathname === "/admin"
+                  : pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href));
 
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isCurrent
-                    ? "bg-purple-950/80 text-purple-200 border border-purple-800/60 font-semibold shadow-sm"
-                    : "text-sidebar-muted hover:bg-sidebar-hover hover:text-white"
-                }`}
-              >
-                <Icon className="w-4 h-4 flex-shrink-0 text-purple-400" />
-                <span className="flex-1 text-xs">{item.name}</span>
-                {item.badge && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-700/50">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </div>
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isCurrent
+                      ? "bg-purple-950/80 text-purple-200 border border-purple-800/60 font-semibold shadow-sm"
+                      : "text-sidebar-muted hover:bg-sidebar-hover hover:text-white"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0 text-purple-400" />
+                  <span className="flex-1 text-xs">{item.name}</span>
+                  {item.badge && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-700/50">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
 
-      {/* Tenant / Organization Footer Card */}
-      <div className="p-4 border-t border-sidebar-border">
+      {/* Tenant / Organization Footer Card & Logout */}
+      <div className="p-4 border-t border-sidebar-border space-y-3">
         <div className="bg-sidebar-hover p-3 rounded-lg border border-sidebar-border/60">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-semantic-teal" />
-            <span className="text-xs font-semibold text-white truncate">SpeedCheck Valuers</span>
+          <div className="flex items-center justify-between gap-1 mb-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <CheckCircle2 className="w-3.5 h-3.5 text-semantic-teal flex-shrink-0" />
+              <span className="text-xs font-semibold text-white truncate">{user.organization}</span>
+            </div>
+            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-brand/30 text-blue-300 border border-brand/40">
+              {user.role}
+            </span>
           </div>
-          <div className="text-[11px] text-sidebar-muted mt-1 flex justify-between">
-            <span>Pune Main Branch</span>
-            <span className="text-emerald-400 font-mono font-semibold">950 Cr</span>
+          <div className="text-[11px] text-sidebar-muted flex justify-between">
+            <span className="truncate max-w-[120px]">{user.branch}</span>
+            <span className="text-emerald-400 font-mono font-semibold">
+              {user.walletCredits !== undefined ? `${user.walletCredits} Cr` : "950 Cr"}
+            </span>
           </div>
         </div>
+
+        {/* Sidebar Bottom Logout Button */}
+        <button
+          type="button"
+          onClick={logout}
+          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-300 hover:text-red-400 hover:bg-red-950/40 border border-slate-700/60 hover:border-red-900/60 rounded-lg transition-colors group cursor-pointer"
+          title="Sign out of VahanCheck Enterprise"
+        >
+          <LogOut className="w-4 h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
+          <span>Log Out</span>
+        </button>
       </div>
     </aside>
   );

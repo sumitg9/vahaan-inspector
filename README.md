@@ -67,6 +67,8 @@ curl http://localhost:4000/health          # Mock APISathi Server
 
 ## 4. Documentation Index
 
+- [docs/USER_README.md](docs/USER_README.md): Master System Administrator & Super Admin Operations Manual.
+- [docs/DEPLOYMENT_AND_RELEASE_GUIDE.md](docs/DEPLOYMENT_AND_RELEASE_GUIDE.md): Master production deployment and release runbook.
 - [docs/PROJECT_SPECIFICATION.md](docs/PROJECT_SPECIFICATION.md): Core platform vision, user personas, module scopes.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): System architecture, tenancy isolation, offline sync protocol.
 - [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md): PostgreSQL DDL, schema diagrams, minor unit monetary storage.

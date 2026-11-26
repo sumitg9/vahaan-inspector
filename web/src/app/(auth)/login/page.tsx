@@ -3,8 +3,16 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Car, Lock, Mail, ShieldCheck, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { setActiveUser, PRESET_USERS } from "@/lib/auth";
 
 const DEMO_PERSONAS = [
+  {
+    role: "Platform Super Admin",
+    name: "Vikramaditya Roy",
+    email: "root@vahancheck.com",
+    org: "VahanCheck Systems (Global)",
+    badge: "Root Governance",
+  },
   {
     role: "Organization Admin",
     name: "Anil Deshmukh",
@@ -54,9 +62,19 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
 
+    const targetUser =
+      email === "root@vahancheck.com"
+        ? PRESET_USERS.superadmin
+        : email === "valuer.sharma@speedcheck.in"
+        ? PRESET_USERS.valuer
+        : email === "inspector.rajesh@speedcheck.in"
+        ? PRESET_USERS.inspector
+        : PRESET_USERS.admin;
+
     // Simulate authentication call to /api/v1/auth/login
     setTimeout(() => {
       setIsLoading(false);
+      setActiveUser(targetUser);
       if (email === "valuer.sharma@speedcheck.in") {
         // Trigger MFA flow for valuer
         setMfaStep(true);
@@ -69,6 +87,7 @@ export default function LoginPage() {
   const handleMfaVerify = (e: React.FormEvent) => {
     e.preventDefault();
     if (otpCode === "123456" || otpCode.length === 6) {
+      setActiveUser(PRESET_USERS.valuer);
       window.location.href = "/";
     } else {
       setError("Invalid verification code. Use demo code: 123456");
